@@ -6,6 +6,8 @@ set -e
 ./../node_modules/.bin/http-server -p 8081 ./pages/ &
 HTTP_SERVER=$! # store server PID for later
 
+mkdir -p output
+
 # collect screenshots
 ./../index.js --output ./output/ --host http://localhost:8081/ ./pages.json
 
