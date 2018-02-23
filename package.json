@@ -1,10 +1,13 @@
 {
-  "name": "pastshot",
+  "name": "pastshots",
+  "repository": {
+    "url": "https://github.com/gyoshev/pastshots.git"
+  },
   "version": "1.0.0",
   "description": "Screenshot HTML files in directory and compare",
   "main": "index.js",
   "bin": {
-    "pastshot": "./index.js"
+    "pastshots": "./index.js"
   },
   "keywords": [],
   "author": "",
