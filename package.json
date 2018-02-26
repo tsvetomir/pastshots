@@ -15,9 +15,9 @@
   "dependencies": {
     "commander": "^2.13.0",
     "geckodriver": "^1.10.0",
+    "glob": "^7.1.2",
+    "http-server": "^0.11.1",
+    "mkdirp": "^0.5.1",
     "selenium-webdriver": "^3.6.0"
-  },
-  "devDependencies": {
-    "http-server": "^0.11.1"
   }
 }

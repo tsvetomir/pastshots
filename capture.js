@@ -5,8 +5,12 @@ const firefox = require('selenium-webdriver/firefox');
 const fs = require('fs');
 const path = require('path');
 const urllib = require('url');
+const mkdirp = require('mkdirp');
 
-exports.capture = async function capture({ host, pages, dimensions, output }) {
+const WIDTH = 1024;
+const HEIGHT = 768;
+
+exports.capture = async function capture({ host, pages, output }) {
 
   const binary = new firefox.Binary(firefox.Channel.RELEASE);
   binary.addArguments('-headless');
@@ -19,20 +23,22 @@ exports.capture = async function capture({ host, pages, dimensions, output }) {
     .setFirefoxOptions(options)
     .build();
 
+  mkdirp.sync(output);
+
   try {
     for (let page of pages) {
       const name = path.basename(page, '.html');
       const url = host + page;
-      await runTest({ driver, url, dimensions, name, output });
+      await runTest({ driver, url, name, output });
     }
   } catch (e) {
     console.error('Error during capture:', e);
   } finally {
-    driver.quit();
+    await driver.quit();
   }
 };
 
-async function runTest({ driver, url, dimensions, name, output }) {
+async function runTest({ driver, url, name, output }) {
   const { innerSize, outerSize } = await driver.executeScript(`
     return {
       outerSize: {
@@ -55,13 +61,14 @@ async function runTest({ driver, url, dimensions, name, output }) {
   await driver.get(url);
   await driver.sleep(1000);
 
-  for (let [width, height] of dimensions) {
-    await driver.manage().window().setSize(width + chromeSize.width, height + chromeSize.height);
-    await driver.sleep(1000);
-    const data = await driver.takeScreenshot();
-    const b = Buffer.from(data, 'base64');
-    fs.writeFileSync(`./${output}/${name}.png`, b);
-  }
+  const width = WIDTH + chromeSize.width;
+  const height = HEIGHT + chromeSize.height;
+
+  await driver.manage().window().setSize(width, height);
+  await driver.sleep(1000);
+  const data = await driver.takeScreenshot();
+  const b = Buffer.from(data, 'base64');
+  fs.writeFileSync(`./${output}/${name}.png`, b);
 
   return true;
 }

@@ -4,25 +4,34 @@ const program = require('commander');
 const fs = require('fs');
 const package = require('./package.json');
 
+// "pastshots --output tests/output --host tests/visual/*.html --port 8081",
+
 program
   .version(package.version)
-  .usage('[options] <file>')
-  .option('-o, --output [dir]', 'Directory where the captured screenshots will be saved', 'pastshots')
-  .option('-h, --host [url]', 'Host that serves the pages described in <file>', 'http://localhost/')
+  .usage('[options] ')
+  .option('--output <dir>', 'Directory where the captured screenshots will be saved', 'pastshots')
+  .option('--serve <glob>', 'Pages to serve with an embedded HTTP server', false)
+  .option('--port <number>', 'Port under which to ', 8081)
   .parse(process.argv);
 
-const file = program.args[0];
+const { serve, port, output } = program;
+const glob = require('glob');
+const pages = glob.sync(serve);
 
-if (file) {
-  const capture = require('./capture').capture;
-  const pages = JSON.parse(fs.readFileSync(file, { encoding: 'utf8' }));
+const createServer = require('http-server').createServer;
+const server = createServer({
+  root: './',
+  showDotfiles: false,
+  port
+});
 
-  capture({
-    output: program.output,
-    host: program.host,
-    dimensions: [[1024, 768]],
-    pages: pages
-  });
-} else {
-  console.error('No pages provided.');
-}
+server.listen(port);
+
+const capture = require('./capture').capture;
+
+capture({
+  host: `http://localhost:${port}/`,
+  output,
+  pages
+})
+  .then(() => server.close());
