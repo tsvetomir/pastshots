@@ -7,6 +7,8 @@ const path = require('path');
 const urllib = require('url');
 const mkdirp = require('mkdirp');
 
+const imageminWebp = require('imagemin-webp');
+
 const WIDTH = 1024;
 const HEIGHT = 768;
 
@@ -67,8 +69,11 @@ async function runTest({ driver, url, name, output }) {
   await driver.manage().window().setSize(width, height);
   await driver.sleep(1000);
   const data = await driver.takeScreenshot();
-  const b = Buffer.from(data, 'base64');
-  fs.writeFileSync(`./${output}/${name}.png`, b);
+
+  const png = Buffer.from(data, 'base64');
+  const webp = await imageminWebp({ lossless: true })(png);
+
+  fs.writeFileSync(`./${output}/${name}.webp`, webp);
 
   return true;
 }
