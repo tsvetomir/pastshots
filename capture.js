@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const urllib = require('url');
 const mkdirp = require('mkdirp');
+const imageminOptipng = require('imagemin-optipng');
 
 const WIDTH = 1024;
 const HEIGHT = 768;
@@ -67,8 +68,11 @@ async function runTest({ driver, url, name, output }) {
   await driver.manage().window().setSize(width, height);
   await driver.sleep(1000);
   const data = await driver.takeScreenshot();
-  const b = Buffer.from(data, 'base64');
-  fs.writeFileSync(`./${output}/${name}.png`, b);
+
+  const png = Buffer.from(data, 'base64');
+  const optimized = await imageminOptipng({ optimizationLevel: 7 })(png);
+
+  fs.writeFileSync(`./${output}/${name}.png`, optimized);
 
   return true;
 }
