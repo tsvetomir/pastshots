@@ -1,0 +1,23 @@
+sudo: required
+
+language: node_js
+
+cache:
+  directories:
+    - node_modules
+
+notifications:
+  email: false
+
+node_js:
+  - '8'
+
+before_install:
+  - printf "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" >> ~/.npmrc
+
+after_success:
+  - npx semantic-release
+
+branches:
+  except:
+    - "/\\d+\\.\\d+\\.\\d+$/"

@@ -3,7 +3,7 @@
   "repository": {
     "url": "https://github.com/gyoshev/pastshots.git"
   },
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Screenshot HTML files in directory and compare",
   "main": "index.js",
   "bin": {
@@ -19,5 +19,8 @@
     "http-server": "^0.11.1",
     "mkdirp": "^0.5.1",
     "selenium-webdriver": "^3.6.0"
+  },
+  "devDependencies": {
+    "semantic-release": "^12.4.1"
   }
 }
