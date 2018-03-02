@@ -68,14 +68,12 @@ async function runTest({ driver, url, name, output }) {
   console.log(`Loading ${url}...`);
   await driver.get(url);
   await driver.sleep(200);
-  console.log(`Getting screenshot...`);
+
   const data = await driver.takeScreenshot();
 
-  console.log(`Optimizing...`);
   const png = Buffer.from(data, 'base64');
   const optimized = await imageminOptipng({ optimizationLevel: 3 })(png);
 
-  console.log(`Writing...`);
   fs.writeFileSync(`./${output}/${name}.png`, optimized);
 
   return true;
