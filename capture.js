@@ -62,6 +62,19 @@ async function setViewportSize(driver, size) {
   await driver.manage().window().setSize(width, height);
 };
 
+async function elementOrViewport(driver, selector) {
+  let element;
+
+  try {
+    element = await driver.findElement(By.css(selector));
+    console.log(`  Taking screenshot of element ${selector}`);
+    return element;
+  } catch(e) {
+    console.log('  Taking screenshot of viewport');
+    return driver;
+  }
+}
+
 
 async function runTest({ driver, url, name, output }) {
 
@@ -69,7 +82,8 @@ async function runTest({ driver, url, name, output }) {
   await driver.get(url);
   await driver.sleep(200);
 
-  const data = await driver.takeScreenshot();
+  const element = await elementOrViewport(driver, '#test-area');
+  const data = await element.takeScreenshot();
 
   const png = Buffer.from(data, 'base64');
   const optimized = await imageminOptipng({ optimizationLevel: 3 })(png);
