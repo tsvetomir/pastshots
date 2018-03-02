@@ -1,6 +1,8 @@
 const webdriver = require('selenium-webdriver');
 require('geckodriver');
+require('chromedriver');
 const By = webdriver.By;
+const chrome = require('selenium-webdriver/chrome');
 const firefox = require('selenium-webdriver/firefox');
 const fs = require('fs');
 const path = require('path');
@@ -11,18 +13,15 @@ const imageminOptipng = require('imagemin-optipng');
 const WIDTH = 1024;
 const HEIGHT = 768;
 
-exports.capture = async function capture({ host, pages, output }) {
-
-  const binary = new firefox.Binary(firefox.Channel.RELEASE);
-  binary.addArguments('-headless');
-
-  const options = new firefox.Options();
-  options.setBinary(binary);
-
+exports.capture = async function capture({ browser, host, pages, output }) {
+  const size = { width: WIDTH, height: HEIGHT };
   const driver = new webdriver.Builder()
-    .forBrowser('firefox')
-    .setFirefoxOptions(options)
+    .forBrowser(browser)
+    .setChromeOptions(new chrome.Options().windowSize(size))
+    .setFirefoxOptions(new firefox.Options().headless().windowSize(size))
     .build();
+
+  await setViewportSize(driver, size);
 
   mkdirp.sync(output);
 
@@ -39,7 +38,7 @@ exports.capture = async function capture({ host, pages, output }) {
   }
 };
 
-async function runTest({ driver, url, name, output }) {
+async function setViewportSize(driver, size) {
   const { innerSize, outerSize } = await driver.executeScript(`
     return {
       outerSize: {
@@ -57,21 +56,26 @@ async function runTest({ driver, url, name, output }) {
     width: outerSize.width - innerSize.width,
     height: outerSize.height - innerSize.height
   };
-
-  console.log(`Loading url ${url}...`);
-  await driver.get(url);
-  await driver.sleep(1000);
-
-  const width = WIDTH + chromeSize.width;
-  const height = HEIGHT + chromeSize.height;
+  const width = size.width + chromeSize.width;
+  const height = size.height + chromeSize.height;
 
   await driver.manage().window().setSize(width, height);
-  await driver.sleep(1000);
+};
+
+
+async function runTest({ driver, url, name, output }) {
+
+  console.log(`Loading ${url}...`);
+  await driver.get(url);
+  await driver.sleep(200);
+  console.log(`Getting screenshot...`);
   const data = await driver.takeScreenshot();
 
+  console.log(`Optimizing...`);
   const png = Buffer.from(data, 'base64');
-  const optimized = await imageminOptipng({ optimizationLevel: 7 })(png);
+  const optimized = await imageminOptipng({ optimizationLevel: 3 })(png);
 
+  console.log(`Writing...`);
   fs.writeFileSync(`./${output}/${name}.png`, optimized);
 
   return true;

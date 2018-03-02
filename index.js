@@ -9,12 +9,13 @@ const package = require('./package.json');
 program
   .version(package.version)
   .usage('[options] ')
-  .option('--output <dir>', 'Directory where the captured screenshots will be saved', 'pastshots')
+  .option('--output <dir>', 'Output directory for the captured screenshots', 'pastshots')
   .option('--serve <glob>', 'Pages to serve with an embedded HTTP server', false)
-  .option('--port <number>', 'Port under which to ', 8081)
+  .option('--port <number>', 'Port number for the embedded HTTP server (--serve)', 8081)
+  .option('--browser <firefox|chrome>', 'Browser that will take screenshots', 'firefox')
   .parse(process.argv);
 
-const { serve, port, output } = program;
+const { browser, serve, port, output } = program;
 const glob = require('glob');
 const pages = glob.sync(serve);
 
@@ -31,6 +32,7 @@ const capture = require('./capture').capture;
 
 capture({
   host: `http://localhost:${port}/`,
+  browser,
   output,
   pages
 })
