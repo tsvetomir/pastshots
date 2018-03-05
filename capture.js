@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const urllib = require('url');
 const mkdirp = require('mkdirp');
+const looksSame = require('looks-same');
 const imageminOptipng = require('imagemin-optipng');
 
 const WIDTH = 1024;
@@ -86,9 +87,27 @@ async function runTest({ driver, url, name, output }) {
   const data = await element.takeScreenshot();
 
   const png = Buffer.from(data, 'base64');
-  const optimized = await imageminOptipng({ optimizationLevel: 3 })(png);
+  const filename = `./${output}/${name}.png`;
 
-  fs.writeFileSync(`./${output}/${name}.png`, optimized);
+  const writeFile = async (png, filename) => {
+    const optimized = await imageminOptipng({ optimizationLevel: 3 })(png);
+    fs.writeFileSync(filename, optimized);
+  };
+
+  if (fs.existsSync(filename)) {
+    // do not overwrite file, if there are no visual differences
+    looksSame(png, filename, { strict: true }, (err, equal) => {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      } else if (!equal) {
+        writeFile(png, filename);
+      }
+    });
+  } else {
+    // initial run, write file
+    writeFile(png, filename);
+  }
 
   return true;
 }
