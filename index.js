@@ -4,6 +4,23 @@ const program = require('commander');
 const fs = require('fs');
 const package = require('./package.json');
 
+function readConfig() {
+  const configName = './.pastshotsrc';
+
+  if (!fs.existsSync(configName)) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(fs.readFileSync(configName, { encoding: 'utf-8' }));
+  } catch(e) {
+    console.error('Can not parse .pasthostsrc');
+    console.error(e);
+    process.exit(1);
+  }
+}
+const pastshotsrc = readConfig();
+
 // "pastshots --output tests/output --host tests/visual/*.html --port 8081",
 
 function parseViewportSize(val) {
@@ -24,7 +41,7 @@ program
   .option('--create-diff <boolean>', 'Create diff image', false)
   .parse(process.argv);
 
-const { browser, serve, port, output, viewportSize, selector, tolerance, createDiff } = program;
+const { browser, serve, port, output, viewportSize, selector, tolerance, createDiff } = { ...program, ...pastshotsrc };
 const glob = require('glob');
 const pages = glob.sync(serve);
 
