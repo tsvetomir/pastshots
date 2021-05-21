@@ -13,7 +13,7 @@ const imageminOptipng = require('imagemin-optipng');
 const WIDTH = 1024;
 const HEIGHT = 768;
 
-exports.capture = async function capture({ browser, host, pages, output, viewportSize, selector, tolerance, createDiff }) {
+exports.capture = async function capture({ browser, host, pages, root, output, viewportSize, selector, tolerance, createDiff }) {
   const size = viewportSize || { width: WIDTH, height: HEIGHT };
 
   const driver = new webdriver.Builder()
@@ -24,13 +24,16 @@ exports.capture = async function capture({ browser, host, pages, output, viewpor
 
   await setViewportSize(driver, size);
 
-  mkdirp.sync(output);
-
   try {
     for (let page of pages) {
       const name = path.basename(page, '.html');
       const url = host + page;
-      await runTest({ driver, url, name, output, selector, tolerance, createDiff });
+
+      const relativePath = path.relative(root, page);
+      const outputPath = path.dirname(path.join(output, relativePath));
+      mkdirp.sync(outputPath);
+
+      await runTest({ driver, url, name, outputPath, selector, tolerance, createDiff });
     }
   } catch (e) {
     console.error('Error during capture:', e);
@@ -105,8 +108,7 @@ const createDiffImage = (current, reference, filename, tolerance) => {
   }));
 };
 
-async function runTest({ driver, url, name, output, selector, tolerance, createDiff }) {
-
+async function runTest({ driver, url, name, outputPath, selector, tolerance, createDiff }) {
   console.log(`Loading ${url}...`);
   await driver.get(url);
   await driver.sleep(200);
@@ -115,8 +117,8 @@ async function runTest({ driver, url, name, output, selector, tolerance, createD
   const data = await element.takeScreenshot();
 
   const png = Buffer.from(data, 'base64');
-  const filename = `./${output}/${name}.png`;
-  const diffname = `./${output}/${name}_diff_${Date.now()}.png`;
+  const filename = `./${outputPath}/${name}.png`;
+  const diffname = `./${outputPath}/${name}_diff_${Date.now()}.png`;
 
   if (!fs.existsSync(filename)) {
     // initial run, write file
